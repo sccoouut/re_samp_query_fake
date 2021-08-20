@@ -1,12 +1,21 @@
-
-// You need to link Ws2_32 library
-
 #include <iostream>
-#include <WinSock2.h>
-#include <ws2tcpip.h>
-
+#include <thread>
+#include <cstring> // mem operations
+#ifdef _WIN32
+#	include <winsock2.h>
+#	include <ws2tcpip.h>
+#else
+#	include <sys/types.h>
+#	include <sys/socket.h>
+#	include <netinet/in.h>
+#	include <unistd.h>
+#endif // _WIN32
 #include "events.h"
 #include "bytesteam.h"
+
+#ifndef _WIN32
+using SOCKET = int;
+#endif // _WIN32
 
 enum e_query_type : uint8_t
 {
@@ -35,11 +44,17 @@ public:
 
     void init(u_short a_port)
     {
+#ifdef _WIN32
         WSADATA wsa_data;
         WSAStartup(MAKEWORD(2, 2), &wsa_data);
-        
+#endif // _WIN32
+
         sockaddr_in addr;
+#ifdef _WIN32
         ZeroMemory(&addr, sizeof(addr));
+#else
+        std::memset(&addr, 0, sizeof(addr));
+#endif // _WIN32
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = INADDR_ANY;
         addr.sin_port = htons(a_port);
@@ -53,9 +68,13 @@ public:
 
     void monitor()
     {
-        char buffer[512];
+        char buffer[2048];
         sockaddr from_addr;
+#ifdef _WIN32
         int from_len, recv_len;
+#else
+        unsigned int from_len, recv_len;
+#endif // _WIN32
 
         recv_len = ::recvfrom(m_socket, buffer, sizeof buffer, 0, &from_addr, &from_len);
         if (recv_len > 0)
@@ -95,8 +114,12 @@ public:
 
     void shutdown()
     {
+#ifdef _WIN32
         closesocket(m_socket);
         WSACleanup();
+#else
+	close(m_socket);
+#endif // _WIN32
     }
 };
 
