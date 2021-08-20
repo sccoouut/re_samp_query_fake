@@ -68,7 +68,7 @@ public:
 
     void monitor()
     {
-        char buffer[2048];
+        char buffer[512];
         sockaddr from_addr;
 #ifdef _WIN32
         int from_len, recv_len;
@@ -76,7 +76,11 @@ public:
         unsigned int from_len, recv_len;
 #endif // _WIN32
 
-        recv_len = ::recvfrom(m_socket, buffer, sizeof buffer, 0, &from_addr, &from_len);
+        // idk why but without it may crash
+        try
+        {
+            recv_len = ::recvfrom(m_socket, buffer, sizeof buffer, 0, &from_addr, &from_len);
+        } catch (...) {}
         if (recv_len > 0)
         {
             std::string result;
@@ -106,7 +110,10 @@ public:
 
             if (!result.empty())
             {
-                ::sendto(m_socket, result.c_str(), result.length(), 0, &from_addr, from_len);
+                try
+                {
+                    ::sendto(m_socket, result.c_str(), result.length(), 0, &from_addr, from_len);
+                } catch ( ... ) {}
                 std::cout << ". < Response sended." << std::endl;
             }
         }
@@ -133,7 +140,7 @@ int main()
         std::cout << ". > Received SERVERINFO packet!" << std::endl;
 
         bs.write_num<char>(0, 11);
-        bs.write_num<short>(999);
+        bs.write_num<short>(200);
         bs.write_num<short>(999);
         bs.write_str("host");
         bs.write_str("mode");

@@ -23,5 +23,6 @@ public:
 		std::lock_guard<std::mutex> lock(event_lock);
 
 		if (m_func) return m_func(std::forward<Args>(params)...);
+		return R(); // mega ultra SIGSEGV fix
 	}
 };
