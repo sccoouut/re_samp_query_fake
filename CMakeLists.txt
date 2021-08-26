@@ -14,4 +14,3 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 if(WIN32)
 	target_link_libraries(${PROJECT_NAME} ws2_32)
 endif()
-target_sources(${PROJECT_NAME} PRIVATE)
